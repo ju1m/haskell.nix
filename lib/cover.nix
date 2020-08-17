@@ -26,10 +26,6 @@ in stdenv.mkDerivation {
       find $1 -iwholename "*/hpc/vanilla/mix" -exec find {} -maxdepth 1 -type d -iwholename "*/mix/*" \; -quit
     }
 
-    findCabalFile() {
-      find $1 -iname "*.cabal" -print -quit
-    }
-
     mkdir -p $out/share/hpc/mix/${identifier}
     mkdir -p $out/share/hpc/tix/${identifier}
     mkdir -p $out/share/hpc/html/${identifier}
@@ -49,7 +45,6 @@ in stdenv.mkDerivation {
       # Exclude test modules from tix file
       excludedModules=('Main')
       # Exclude test modules
-      local cabalFile=$(findCabalFile $src)
       testModules="${with lib; concatStringsSep " " (foldl' (acc: test: acc ++ (getTestModulesFor test)) [] testsWithCoverage)}"
       for module in $testModules; do
         excludedModules+=("$module")
