@@ -178,6 +178,7 @@ let
     compiler-nix-name = callTest ./compiler-nix-name {};
     hls-cabal = callTest ./haskell-language-server/cabal.nix {};
     hls-stack = callTest ./haskell-language-server/stack.nix {};
+    coverage = callTest ./coverage {};
 
     unit = unitTests;
   } // lib.optionalAttrs (!stdenv.hostPlatform.isGhcjs && pkgs.haskell-nix.defaultCompilerNixName != "ghc8101" ) {

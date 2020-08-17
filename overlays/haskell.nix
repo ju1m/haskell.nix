@@ -537,10 +537,13 @@ final: prev: {
                              ++ (args.modules or [])
                              ++ final.lib.optional (args ? ghc) { ghc.package = args.ghc; };
                 };
-            in addProjectAndPackageAttrs {
-              inherit (pkg-set.config) hsPkgs;
-              inherit pkg-set;
-              stack-nix = callProjectResults.projectNix;
+                project = addProjectAndPackageAttrs {
+                  inherit (pkg-set.config) hsPkgs;
+                  inherit pkg-set;
+                  stack-nix = callProjectResults.projectNix;
+                };
+            in project // {
+                projectCoverageReport = haskellLib.projectCoverageReport (haskellLib.selectProjectPackages project.hsPkgs);
             };
 
         stackProject = args: let p = stackProject' args;
