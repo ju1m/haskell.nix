@@ -239,11 +239,12 @@ in {
     inherit stdenv lib haskellLib srcOnly;
   };
 
-  # Do coverage of a project
+  # Do coverage of a package
   coverageReport = import ./cover.nix {
     inherit stdenv lib haskellLib pkgs;
   };
 
+  # Do coverage of a project
   projectCoverageReport = import ./cover-project.nix {
     inherit stdenv lib haskellLib pkgs;
   };
