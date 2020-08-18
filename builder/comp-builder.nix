@@ -54,6 +54,7 @@ let self =
 
 # Coverage
 , doCoverage ? component.doCoverage
+, doCoverageNoRecurse ? false
 
 # Data
 , enableSeparateDataOutput ? component.enableSeparateDataOutput
@@ -76,9 +77,11 @@ let
 
   needsProfiling = enableExecutableProfiling || enableLibraryProfiling;
 
+  needsCoverage = doCoverage || doCoverageNoRecurse;
+
   configFiles = makeConfigFiles {
     inherit (package) identifier;
-    inherit component fullName flags needsProfiling;
+    inherit component fullName flags needsProfiling needsCoverage;
   };
 
   enableFeature = enable: feature:
@@ -122,7 +125,7 @@ let
       (enableFeature enableExecutableProfiling "executable-profiling")
       (enableFeature enableStatic "static")
       (enableFeature enableShared "shared")
-      (enableFeature doCoverage "coverage")
+      (enableFeature (doCoverage || doCoverageNoRecurse) "coverage")
     ] ++ lib.optionals (stdenv.hostPlatform.isMusl && (haskellLib.isExecutableType componentId)) [
       # These flags will make sure the resulting executable is statically linked.
       # If it uses other libraries it may be necessary for to add more
@@ -209,6 +212,13 @@ let
     componentDrv = drv;
   };
 
+  isComponentLibrary = d: (d.identifier == package.identifier);
+
+  asBuildInput = d:
+     if (doCoverage && isComponentLibrary d)
+     then (d.components.library.coveredNoRecurse or d)
+     else (d.components.library or d);
+
   drv = stdenv.mkDerivation (commonAttrs // {
     pname = nameOnly;
     inherit (package.identifier) version;
@@ -225,6 +235,7 @@ let
       env = shellWrappers;
       profiled = self (drvArgs // { enableLibraryProfiling = true; });
       covered = self (drvArgs // { doCoverage = true; });
+      coveredNoRecurse = self (drvArgs // { doCoverageNoRecurse = true; });
     } // lib.optionalAttrs (haskellLib.isLibrary componentId) ({
         inherit haddock;
         inherit (haddock) haddockDir; # This is null if `doHaddock = false`
@@ -250,9 +261,9 @@ let
       # Not sure why pkgconfig needs to be propagatedBuildInputs but
       # for gi-gtk-hs it seems to help.
       ++ builtins.concatLists pkgconfig;
-  
+
     buildInputs = component.libs
-      ++ map (d: d.components.library or d) component.depends;
+      ++ map asBuildInput component.depends;
 
     nativeBuildInputs =
       [shellWrappers buildPackages.removeReferencesTo]
@@ -360,7 +371,7 @@ let
           fi
         done
       '')
-      + (lib.optionalString doCoverage ''
+      + (lib.optionalString (doCoverage || doCoverageNoRecurse) ''
         mkdir -p $out/share
         cp -r dist/hpc $out/share
       '')

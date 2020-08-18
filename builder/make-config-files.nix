@@ -1,6 +1,6 @@
 { stdenv, lib, haskellLib, ghc, nonReinstallablePkgs, runCommand, writeText, writeScript }:
 
-{ identifier, component, fullName, flags ? {}, needsProfiling ? false, chooseDrv ? drv: drv }:
+{ identifier, component, fullName, flags ? {}, needsProfiling ? false, needsCoverage ? false, chooseDrv ? drv: drv }:
 
 let
   flagsAndConfig = field: xs: lib.optionalString (xs != []) ''
@@ -43,13 +43,17 @@ let
   libDir         = "lib/${ghcCommand}-${ghc.version}";
   packageCfgDir  = "${libDir}/package.conf.d";
 
+
+  isComponentLibrary = d: d.identifier == identifier;
+
   # Filters out only library packages that for this GHC target
   # TODO investigate why this is needed
   # TODO find out why p ? configFiles helps (for instance for `R1909.aarch64-unknown-linux-gnu.tests.cabal-22.run.x86_64-linux`)
   libDeps = map chooseDrv (
     (if needsProfiling then (x: map (p: p.profiled or p) x) else x: x)
-    (lib.filter (p: (p ? configFiles) && p.configFiles.targetPrefix == ghc.targetPrefix)
-    (map getLibComponent component.depends))
+    (map (d: if (needsCoverage && isComponentLibrary d) then d.coveredNoRecurse else d)
+      (lib.filter (p: (p ? configFiles) && p.configFiles.targetPrefix == ghc.targetPrefix)
+        (map getLibComponent component.depends)))
   );
   cfgFiles =
     let xs = map
