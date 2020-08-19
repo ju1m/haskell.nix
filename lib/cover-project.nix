@@ -1,8 +1,12 @@
 { pkgs, stdenv, lib, haskellLib }:
 
-project:
+# List of project packages to generate a coverage report for
+{ packages
+, coverageReportOverrides ? {}
+}:
 
 let
+  getPackageCoverageReport = packageName: (coverageReportOverrides."${packageName}" or packages."${packageName}".coverageReport');
 
   # Create table rows for an project coverage index page that look something like:
   #
@@ -55,7 +59,7 @@ let
             <th>TestSuite</th>
           </tr>
 
-          ${with lib; concatStringsSep "\n" (mapAttrsToList (_ : packageTableRows) project)}
+          ${with lib; concatStringsSep "\n" (mapAttrsToList (_ : packageTableRows) packages)}
 
         </tbody>
       </table>
@@ -92,7 +96,7 @@ stdenv.mkDerivation {
 
     ${with lib; concatStringsSep "\n" (mapAttrsToList (n: package: ''
       identifier="${package.identifier.name}-${package.identifier.version}"
-      report=${package.coverageReport}
+      report=${getPackageCoverageReport n}
       tix="$report/share/hpc/tix/$identifier/$identifier.tix"
       if test -f "$tix"; then
         tixFiles+=("$tix")
@@ -102,7 +106,7 @@ stdenv.mkDerivation {
       cp -R $report/share/hpc/mix/* $out/share/hpc/mix
       cp -R $report/share/hpc/tix/* $out/share/hpc/tix
       cp -R $report/share/hpc/html/* $out/share/hpc/html
-    '') project)}
+    '') packages)}
 
     if [ ''${#tixFiles[@]} -ne 0 ]; then
       hpcSumCmd+=("''${tixFiles[@]}")

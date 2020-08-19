@@ -1,18 +1,21 @@
 { stdenv, lib, haskellLib, pkgs }:
 
-{ name, version, library, tests, plan }:
+{ name
+, version
+, library
+, tests
+}:
 
 let
   buildWithCoverage = builtins.map (d: d.covered);
   runCheck = builtins.map (d: haskellLib.check d);
 
+  testsAsList       = lib.attrValues tests;
   libraryCovered    = library.covered;
-  testsWithCoverage = buildWithCoverage tests;
+  testsWithCoverage = buildWithCoverage testsAsList;
   checks            = runCheck testsWithCoverage;
 
   identifier = name + "-" + version;
-
-  getTestModulesFor = test: plan.components.tests."${test.exeName}".modules;
 
 in stdenv.mkDerivation {
   name = (identifier + "-coverage-report");
@@ -41,11 +44,11 @@ in stdenv.mkDerivation {
       hpcMarkupCmdBase+=("--hpcdir=$mixDir")
     done
 
-    ${lib.optionalString ((builtins.length tests) > 0) ''
+    ${lib.optionalString ((builtins.length testsAsList) > 0) ''
       # Exclude test modules from tix file
       excludedModules=('Main')
       # Exclude test modules
-      testModules="${with lib; concatStringsSep " " (foldl' (acc: test: acc ++ (getTestModulesFor test)) [] testsWithCoverage)}"
+      testModules="${with lib; concatStringsSep " " (foldl' (acc: test: acc ++ test.config.modules) [] testsWithCoverage)}"
       for module in $testModules; do
         excludedModules+=("$module")
       done

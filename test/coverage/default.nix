@@ -15,8 +15,8 @@ let
     }];
   };
 
-  cabalProject = cabalProject' projectArgs;
-  stackProject = stackProject' projectArgs;
+  cabalProj = cabalProject' projectArgs;
+  stackProj = stackProject' projectArgs;
 
 in recurseIntoAttrs ({
   run = stdenv.mkDerivation {
@@ -75,12 +75,12 @@ in recurseIntoAttrs ({
       }
 
       ${concatStringsSep "\n" (map (project: ''
-        pkga_basedir="${project.hsPkgs.pkga.coverageReport}/share/hpc/"
+        pkga_basedir="${project.hsPkgs.pkga.coverageReport'}/share/hpc/"
         findFileExistsNonEmpty "$pkga_basedir/mix/pkga-0.1.0.0/" "PkgA.mix"
         dirExistsEmpty "$pkga_basedir/tix/pkga-0.1.0.0"
         dirExistsEmpty "$pkga_basedir/html/pkga-0.1.0.0"
   
-        pkgb_basedir="${project.hsPkgs.pkgb.coverageReport}/share/hpc/"
+        pkgb_basedir="${project.hsPkgs.pkgb.coverageReport'}/share/hpc/"
         testTix="$pkgb_basedir/tix/tests/tests.tix"
         libTix="$pkgb_basedir/tix/pkgb-0.1.0.0/pkgb-0.1.0.0.tix"
         fileExistsNonEmpty "$testTix"
@@ -98,7 +98,7 @@ in recurseIntoAttrs ({
           exit 1
         fi
 
-        project_basedir="${project.projectCoverageReport}/share/hpc/"
+        project_basedir="${project.projectCoverageReport'}/share/hpc/"
         fileExistsNonEmpty "$project_basedir/html/index.html"
         fileExistsNonEmpty "$project_basedir/tix/all/all.tix"
         dirExists "$project_basedir/html/pkga-0.1.0.0"
@@ -111,7 +111,7 @@ in recurseIntoAttrs ({
         dirExists "$project_basedir/tix/pkga-0.1.0.0"
         dirExists "$project_basedir/tix/pkgb-0.1.0.0"
         dirExists "$project_basedir/tix/tests"
-      '') [ cabalProject stackProject ])}
+      '') [ cabalProj stackProj ])}
 
       touch $out
     '';
@@ -120,7 +120,7 @@ in recurseIntoAttrs ({
 
     passthru = {
       # Used for debugging with nix repl
-      inherit cabalProject stackProject;
+      inherit cabalProj stackProj;
     };
   };
 })

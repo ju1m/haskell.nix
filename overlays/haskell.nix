@@ -480,7 +480,7 @@ final: prev: {
                   inherit (callProjectResults) index-state;
                 };
             in project // {
-                projectCoverageReport = haskellLib.projectCoverageReport (haskellLib.selectProjectPackages project.hsPkgs);
+              projectCoverageReport' = haskellLib.projectCoverageReport { packages = haskellLib.selectProjectPackages project.hsPkgs; };
             };
 
         # Take `hsPkgs` from the `rawProject` and update all the packages and
@@ -503,11 +503,10 @@ final: prev: {
                       ) package'.components;
                       inherit project;
 
-                      coverageReport = haskellLib.coverageReport {
+                      coverageReport' = haskellLib.coverageReport {
                         inherit (package.identifier) name version;
                         inherit (components) library;
-                        tests = with final.lib; attrValues (filterAttrs (_: d: d.config.doCheck) components.tests);
-                        plan = project.pkg-set.config.packages."${package.identifier.name}";
+                        tests = final.lib.filterAttrs (_: d: d.config.doCheck) components.tests;
                       };
                     }
                 ) rawProject.hsPkgs
@@ -519,7 +518,7 @@ final: prev: {
 
         cabalProject = args: let p = cabalProject' args;
             in p.hsPkgs // {
-              inherit (p) plan-nix projectCoverageReport;
+              inherit (p) plan-nix projectCoverageReport';
               # Provide `nix-shell -A shells.ghc` for users migrating from the reflex-platform.
               # But we should encourage use of `nix-shell -A shellFor`
               shells.ghc = p.hsPkgs.shellFor {};
@@ -543,12 +542,12 @@ final: prev: {
                   stack-nix = callProjectResults.projectNix;
                 };
             in project // {
-                projectCoverageReport = haskellLib.projectCoverageReport (haskellLib.selectProjectPackages project.hsPkgs);
+              projectCoverageReport' = haskellLib.projectCoverageReport { packages = haskellLib.selectProjectPackages project.hsPkgs; };
             };
 
         stackProject = args: let p = stackProject' args;
             in p.hsPkgs // {
-              inherit (p) stack-nix;
+              inherit (p) stack-nix projectCoverageReport';
               # Provide `nix-shell -A shells.ghc` for users migrating from the reflex-platform.
               # But we should encourage use of `nix-shell -A shellFor`
               shells.ghc = p.hsPkgs.shellFor {};
