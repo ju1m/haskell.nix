@@ -40,9 +40,16 @@ in pkgs.runCommand (identifier + "-coverage-report")
     done
 
     ${lib.optionalString ((builtins.length testsAsList) > 0) ''
-      # Exclude test modules from tix file
+      # Exclude test modules from tix file. The Main module is
+      # hard-coded here because the Main module is not listed in
+      # "$test.config.modules" (the plan.nix) but must be excluded.
+      # Note that the name of the Main module file does not matter. So
+      # a line in your cabal file such as:
+      #   main-is: Spec.hs
+      # still generates a "Main.mix" file with the contents:
+      #   Mix "Spec.hs" ...
+      # Hence we can hardcode the name "Main" here.
       excludedModules=('Main')
-      # Exclude test modules
       testModules="${with lib; concatStringsSep " " (foldl' (acc: test: acc ++ test.config.modules) [] testsWithCoverage)}"
       for module in $testModules; do
         excludedModules+=("$module")
