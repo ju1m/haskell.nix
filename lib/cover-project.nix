@@ -1,4 +1,4 @@
-{ pkgs, stdenv, lib, haskellLib }:
+{ pkgs, lib, haskellLib }:
 
 # List of project packages to generate a coverage report for
 { packages
@@ -66,17 +66,9 @@ let
     </body>
   </html>
   '';
-in
-stdenv.mkDerivation {
-  name = "project-coverage-report";
-
-  phases = ["buildPhase"];
-
-  buildInputs = (with pkgs; [
-    ghc
-  ]);
-
-  buildPhase = ''
+in pkgs.runCommand "project-coverage-report"
+  { buildInputs = (with pkgs; [ghc]); }
+  ''
     mkdir -p $out/share/hpc/tix/all
     mkdir -p $out/share/hpc/mix/
     mkdir -p $out/share/hpc/html/
@@ -115,5 +107,4 @@ stdenv.mkDerivation {
     fi
 
     cp ${projectIndexHtml} $out/share/hpc/html/index.html
-  '';
-}
+  ''

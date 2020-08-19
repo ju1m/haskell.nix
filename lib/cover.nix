@@ -1,4 +1,4 @@
-{ stdenv, lib, haskellLib, pkgs }:
+{ lib, haskellLib, pkgs }:
 
 { name
 , version
@@ -17,14 +17,9 @@ let
 
   identifier = name + "-" + version;
 
-in stdenv.mkDerivation {
-  name = (identifier + "-coverage-report");
-
-  phases = ["buildPhase"];
-
-  buildInputs = (with pkgs; [ ghc ]);
-
-  buildPhase = ''
+in pkgs.runCommand (identifier + "-coverage-report")
+  { buildInputs = (with pkgs; [ ghc ]); }
+  ''
     findMixDir() {
       find $1 -iwholename "*/hpc/vanilla/mix" -exec find {} -maxdepth 1 -type d -iwholename "*/mix/*" \; -quit
     }
@@ -92,5 +87,4 @@ in stdenv.mkDerivation {
       echo "''${hpcMarkupCmdAll[@]}"
       eval "''${hpcMarkupCmdAll[@]}"
     ''}
-  '';
-}
+  ''
