@@ -73,14 +73,6 @@ in pkgs.runCommand "project-coverage-report"
     mkdir -p $out/share/hpc/mix/
     mkdir -p $out/share/hpc/html/
 
-    findMixDir() {
-      find $1 -iwholename "*/hpc/vanilla/mix" -exec find {} -maxdepth 1 -type d -iwholename "*/mix/*" \; -quit
-    }
-
-    findCabalFile() {
-      find $1 -iname "*.cabal" -print -quit
-    }
-
     # Create tix file with test run information for all packages
     tixFile="$out/share/hpc/tix/all/all.tix"
     hpcSumCmd=("hpc" "sum" "--union" "--output=$tixFile")
