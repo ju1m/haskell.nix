@@ -224,7 +224,6 @@ let
       inherit configFiles executableToolDepends cleanSrc exeName;
       env = shellWrappers;
       profiled = self (drvArgs // { enableLibraryProfiling = true; });
-      covered = self (drvArgs // { doCoverage = true; });
     } // lib.optionalAttrs (haskellLib.isLibrary componentId) ({
         inherit haddock;
         inherit (haddock) haddockDir; # This is null if `doHaddock = false`

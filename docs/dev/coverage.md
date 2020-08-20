@@ -7,10 +7,6 @@ the builder in `comp-builder.nix`. The doCoverage flag enables and
 disables the Cabal coverage flag and copies any generated coverage
 data to "$out/share/hpc".
 
-There also exists a `covered` attribute on each component, it takes
-the existing derivation for that component and modifies it to have
-coverage enabled.
-
 ## Mix and tix files
 
 The coverage information for any derivation consists of "mix" and
