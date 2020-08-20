@@ -35,7 +35,7 @@ in recurseIntoAttrs {
 
       # fixme: run on target platform when cross-compiled
       printf "checking whether executable runs... " >& 2
-      cat ${haskellLib.check packages.cabal-sublib.components.exes.cabal-sublib}/test
+      cat ${haskellLib.check packages.cabal-sublib.components.exes.cabal-sublib}/test-stdout
 
     '' +
     # Musl and Aarch are statically linked..

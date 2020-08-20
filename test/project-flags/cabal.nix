@@ -20,7 +20,7 @@ in recurseIntoAttrs {
       exe="${packages.test-project-flags.components.exes.test-project-flags-exe}/bin/test-project-flags-exe${stdenv.hostPlatform.extensions.executable}"
 
       printf "checking whether executable runs... " >& 2
-      cat ${haskellLib.check packages.test-project-flags.components.exes.test-project-flags-exe}/test
+      cat ${haskellLib.check packages.test-project-flags.components.exes.test-project-flags-exe}/test-stdout
 
       touch $out
     '';

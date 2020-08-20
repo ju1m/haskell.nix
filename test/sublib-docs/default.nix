@@ -25,7 +25,7 @@ in recurseIntoAttrs {
 
       # fixme: run on target platform when cross-compiled
       printf "checking whether executable runs... " >& 2
-      cat ${haskellLib.check packages.sublib-docs.components.exes.sublib-docs}/test
+      cat ${haskellLib.check packages.sublib-docs.components.exes.sublib-docs}/test-stdout
 
     '' +
     # Musl and Aarch are statically linked..
