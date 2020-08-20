@@ -12,6 +12,7 @@ let
 
       packages.pkga.components.library.doCoverage = true;
       packages.pkgb.components.library.doCoverage = true;
+      packages.pkgb.components.tests.tests.doCoverage = true;
     }];
   };
 

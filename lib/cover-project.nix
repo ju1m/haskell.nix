@@ -104,7 +104,7 @@ in pkgs.runCommand "project-coverage-report"
       hpcSumCmd+=("''${tixFiles[@]}")
       echo "''${hpcSumCmd[@]}"
       eval "''${hpcSumCmd[@]}"
-    fi
 
-    cp ${projectIndexHtml} $out/share/hpc/html/index.html
+      cp ${projectIndexHtml} $out/share/hpc/html/index.html
+    fi
   ''

@@ -7,13 +7,8 @@
 }:
 
 let
-  buildWithCoverage = builtins.map (d: d.covered);
-  runCheck = builtins.map (d: haskellLib.check d);
-
-  testsAsList       = lib.attrValues tests;
-  libraryCovered    = library.covered;
-  testsWithCoverage = buildWithCoverage testsAsList;
-  checks            = runCheck testsWithCoverage;
+  testsAsList = lib.attrValues tests;
+  checks      = builtins.map (d: haskellLib.check d) testsAsList;
 
   identifier = name + "-" + version;
 
@@ -28,15 +23,17 @@ in pkgs.runCommand (identifier + "-coverage-report")
     mkdir -p $out/share/hpc/tix/${identifier}
     mkdir -p $out/share/hpc/html/${identifier}
 
-    local src=${libraryCovered.src.outPath}
+    local src=${library.src.outPath}
 
     hpcMarkupCmdBase=("hpc" "markup" "--srcdir=$src")
-    for drv in ${lib.concatStringsSep " " ([ libraryCovered ] ++ testsWithCoverage)}; do
+    for drv in ${lib.concatStringsSep " " ([ library ] ++ testsAsList)}; do
       # Copy over mix files
       local mixDir=$(findMixDir $drv)
-      cp -R $mixDir $out/share/hpc/mix/
+      if [ ! -z "$mixDir" ]; then
+        cp -R "$mixDir" $out/share/hpc/mix/
 
-      hpcMarkupCmdBase+=("--hpcdir=$mixDir")
+        hpcMarkupCmdBase+=("--hpcdir=$mixDir")
+      fi
     done
 
     ${lib.optionalString ((builtins.length testsAsList) > 0) ''
@@ -50,7 +47,7 @@ in pkgs.runCommand (identifier + "-coverage-report")
       #   Mix "Spec.hs" ...
       # Hence we can hardcode the name "Main" here.
       excludedModules=('Main')
-      testModules="${with lib; concatStringsSep " " (foldl' (acc: test: acc ++ test.config.modules) [] testsWithCoverage)}"
+      testModules="${with lib; concatStringsSep " " (foldl' (acc: test: acc ++ test.config.modules) [] testsAsList)}"
       for module in $testModules; do
         excludedModules+=("$module")
       done
@@ -63,35 +60,40 @@ in pkgs.runCommand (identifier + "-coverage-report")
 
       hpcMarkupCmdAll=("''${hpcMarkupCmdBase[@]}" "--destdir=$out/share/hpc/html/${identifier}")
 
-      hpcSumCmd=("''${hpcSumCmdBase[@]}")
+      hpcSumCmd=()
       ${lib.concatStringsSep "\n" (builtins.map (check: ''
-        local hpcMarkupCmdEachTest=("''${hpcMarkupCmdBase[@]}" "--destdir=$out/share/hpc/html/${check.exeName}")
+        if [ -d "${check}/share/hpc/tix" ]; then
+          local hpcMarkupCmdEachTest=("''${hpcMarkupCmdBase[@]}" "--destdir=$out/share/hpc/html/${check.exeName}")
 
-        pushd ${check}/share/hpc/tix
+          pushd ${check}/share/hpc/tix
 
-        tixFileRel="$(find . -iwholename "*.tix" -type f -print -quit)"
+          tixFileRel="$(find . -iwholename "*.tix" -type f -print -quit)"
 
-        mkdir -p $out/share/hpc/tix/$(dirname $tixFileRel)
-        cp $tixFileRel $out/share/hpc/tix/$tixFileRel
+          mkdir -p $out/share/hpc/tix/$(dirname $tixFileRel)
+          cp $tixFileRel $out/share/hpc/tix/$tixFileRel
 
-        # Output tix file with test modules excluded
-        hpcSumCmd+=("$out/share/hpc/tix/$tixFileRel")
+          # Output tix file with test modules excluded
+          hpcSumCmd+=("$out/share/hpc/tix/$tixFileRel")
 
-        hpcMarkupCmdEachTest+=("$out/share/hpc/tix/$tixFileRel")
+          hpcMarkupCmdEachTest+=("$out/share/hpc/tix/$tixFileRel")
 
-        echo "''${hpcMarkupCmdEachTest[@]}"
-        eval "''${hpcMarkupCmdEachTest[@]}"
+          echo "''${hpcMarkupCmdEachTest[@]}"
+          eval "''${hpcMarkupCmdEachTest[@]}"
 
-        popd
+          popd
+        fi
       '') checks)
       }
 
-      hpcMarkupCmdAll+=("$out/share/hpc/tix/${identifier}/${identifier}.tix")
+      if (( "''${#hpcSumCmd[@]}" > 0 )); then
+        hpcMarkupCmdAll+=("$out/share/hpc/tix/${identifier}/${identifier}.tix")
 
-      echo "''${hpcSumCmd[@]}"
-      eval "''${hpcSumCmd[@]}"
+        hpcSumCmd=("''${hpcSumCmdBase[@]}" "''${hpcSumCmd[@]}")
+        echo "''${hpcSumCmd[@]}"
+        eval "''${hpcSumCmd[@]}"
 
-      echo "''${hpcMarkupCmdAll[@]}"
-      eval "''${hpcMarkupCmdAll[@]}"
+        echo "''${hpcMarkupCmdAll[@]}"
+        eval "''${hpcMarkupCmdAll[@]}"
+      fi
     ''}
   ''

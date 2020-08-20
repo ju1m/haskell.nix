@@ -481,6 +481,7 @@ final: prev: {
                 };
             in project // {
               projectCoverageReport' = haskellLib.projectCoverageReport { packages = haskellLib.selectProjectPackages project.hsPkgs; };
+              overrideModules = f: cabalProject' (args // { modules = f args.modules; });
             };
 
         # Take `hsPkgs` from the `rawProject` and update all the packages and
@@ -518,7 +519,7 @@ final: prev: {
 
         cabalProject = args: let p = cabalProject' args;
             in p.hsPkgs // {
-              inherit (p) plan-nix projectCoverageReport';
+              inherit (p) plan-nix projectCoverageReport' overrideModules;
               # Provide `nix-shell -A shells.ghc` for users migrating from the reflex-platform.
               # But we should encourage use of `nix-shell -A shellFor`
               shells.ghc = p.hsPkgs.shellFor {};
@@ -543,11 +544,12 @@ final: prev: {
                 };
             in project // {
               projectCoverageReport' = haskellLib.projectCoverageReport { packages = haskellLib.selectProjectPackages project.hsPkgs; };
+              overrideModules = f: stackProject' (args // { modules = f args.modules; });
             };
 
         stackProject = args: let p = stackProject' args;
             in p.hsPkgs // {
-              inherit (p) stack-nix projectCoverageReport';
+              inherit (p) stack-nix projectCoverageReport' stackProject';
               # Provide `nix-shell -A shells.ghc` for users migrating from the reflex-platform.
               # But we should encourage use of `nix-shell -A shellFor`
               shells.ghc = p.hsPkgs.shellFor {};
