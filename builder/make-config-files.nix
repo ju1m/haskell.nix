@@ -43,9 +43,6 @@ let
   libDir         = "lib/${ghcCommand}-${ghc.version}";
   packageCfgDir  = "${libDir}/package.conf.d";
 
-
-  isComponentLibrary = d: d.identifier == identifier;
-
   # Filters out only library packages that for this GHC target
   # TODO investigate why this is needed
   # TODO find out why p ? configFiles helps (for instance for `R1909.aarch64-unknown-linux-gnu.tests.cabal-22.run.x86_64-linux`)
