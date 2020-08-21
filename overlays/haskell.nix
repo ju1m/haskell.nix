@@ -549,7 +549,7 @@ final: prev: {
 
         stackProject = args: let p = stackProject' args;
             in p.hsPkgs // {
-              inherit (p) stack-nix projectCoverageReport' stackProject';
+              inherit (p) stack-nix projectCoverageReport' overrideModules;
               # Provide `nix-shell -A shells.ghc` for users migrating from the reflex-platform.
               # But we should encourage use of `nix-shell -A shellFor`
               shells.ghc = p.hsPkgs.shellFor {};
